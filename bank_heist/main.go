@@ -19,9 +19,9 @@ func main() {
 
 	openedVault := rand.Intn(100)
 
-	if isHeistOn && openedVault >= 70 {
+	if openedVault >= 70 {
 		fmt.Println("Grab and GO!")
-	} else if isHeistOn {
+	} else {
 		isHeistOn = false
 		fmt.Println("The vault cannot be opened")
 	}
