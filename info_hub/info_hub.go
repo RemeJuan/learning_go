@@ -1,7 +1,8 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
+	"io/ioutil"
 	"syreclabs.com/go/faker"
 )
 
@@ -28,15 +29,15 @@ const (
 },
 */
 type MasterDataItem struct {
-	categoryPortfolio     string
-	categoryId            string
-	businessUnit          string
-	division              string
-	divisionName          string
-	categoryName          string
-	businessUnitName      string
-	categoryPortfolioName string
-	ttl                   int
+	CategoryPortfolio     string `json:"categoryPortfolio"`
+	CategoryId            string `json:"categoryId"`
+	BusinessUnit          string `json:"businessUnit"`
+	Division              string `json:"division"`
+	DivisionName          string `json:"divisionName"`
+	CategoryName          string `json:"categoryName"`
+	BusinessUnitName      string `json:"businessUnitName"`
+	CategoryPortfolioName string `json:"categoryPortfolioName"`
+	Ttl                   int    `json:"ttl"`
 }
 
 type ProductSelection struct {
@@ -48,28 +49,28 @@ type ProductSelection struct {
 
 func generateMasterDataItem() MasterDataItem {
 	return MasterDataItem{
-		categoryId:            faker.Number().Number(18),
-		businessUnit:          faker.Number().Number(18),
-		division:              faker.Number().Number(18),
-		categoryPortfolio:     faker.Number().Number(18),
-		divisionName:          faker.Company().Name(),
-		categoryName:          faker.Company().Name(),
-		businessUnitName:      faker.Company().Name(),
-		categoryPortfolioName: faker.Company().Name(),
-		ttl:                   faker.Number().NumberInt(10),
+		CategoryId:            faker.Number().Number(18),
+		BusinessUnit:          faker.Number().Number(18),
+		Division:              faker.Number().Number(18),
+		CategoryPortfolio:     faker.Number().Number(18),
+		DivisionName:          faker.Company().Name(),
+		CategoryName:          faker.Company().Name(),
+		BusinessUnitName:      faker.Company().Name(),
+		CategoryPortfolioName: faker.Company().Name(),
+		Ttl:                   faker.Number().NumberInt(10),
 	}
 }
 
 func buildProductId(item MasterDataItem, level ProductLevel) string {
 	switch level {
 	case Division:
-		return item.division
+		return item.Division
 	case BusinessUnit:
-		return item.division + "-" + item.businessUnit
+		return item.Division + "-" + item.BusinessUnit
 	case CategoryPortfolio:
-		return item.division + "-" + item.businessUnit + "-" + item.categoryPortfolio
+		return item.Division + "-" + item.BusinessUnit + "-" + item.CategoryPortfolio
 	case Category:
-		return item.division + "-" + item.businessUnit + "-" + item.categoryPortfolio + "-" + item.categoryId
+		return item.Division + "-" + item.BusinessUnit + "-" + item.CategoryPortfolio + "-" + item.CategoryId
 	default:
 		return ""
 	}
@@ -79,15 +80,15 @@ func buildDivision(item MasterDataItem, id string) ProductSelection {
 	return ProductSelection{
 		Id:            id,
 		QueryEngineId: id,
-		Name:          item.divisionName,
+		Name:          item.DivisionName,
 	}
 }
 
 func buildBusinessUnit(item MasterDataItem, id string) ProductSelection {
 	return ProductSelection{
 		Id:            id,
-		QueryEngineId: item.businessUnit,
-		Name:          item.businessUnitName,
+		QueryEngineId: item.BusinessUnit,
+		Name:          item.BusinessUnitName,
 		ParentId:      buildProductId(item, Division),
 	}
 }
@@ -95,8 +96,8 @@ func buildBusinessUnit(item MasterDataItem, id string) ProductSelection {
 func buildCategoryPortfolio(item MasterDataItem, id string) ProductSelection {
 	return ProductSelection{
 		Id:            id,
-		QueryEngineId: item.businessUnit,
-		Name:          item.categoryPortfolioName,
+		QueryEngineId: item.BusinessUnit,
+		Name:          item.CategoryPortfolioName,
 		ParentId:      buildProductId(item, BusinessUnit),
 	}
 }
@@ -104,8 +105,8 @@ func buildCategoryPortfolio(item MasterDataItem, id string) ProductSelection {
 func buildCategory(item MasterDataItem, id string) ProductSelection {
 	return ProductSelection{
 		Id:            id,
-		QueryEngineId: item.categoryPortfolio,
-		Name:          item.categoryName,
+		QueryEngineId: item.CategoryPortfolio,
+		Name:          item.CategoryName,
 		ParentId:      buildProductId(item, CategoryPortfolio),
 	}
 }
@@ -117,19 +118,30 @@ func main() {
 	businessUnits := make([]ProductSelection, 0)
 	categoryPortfolios := make([]ProductSelection, 0)
 	categories := make([]ProductSelection, 0)
+	items := make([]MasterDataItem, 0)
 
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 639; i++ {
 		item := generateMasterDataItem()
 		divisionId := buildProductId(item, Division)
 		buId := buildProductId(item, BusinessUnit)
 		cpId := buildProductId(item, CategoryPortfolio)
 		catId := buildProductId(item, Category)
 
-		response["divisions"] = append(divisions, buildDivision(item, divisionId))
-		response["businessUnits"] = append(businessUnits, buildBusinessUnit(item, buId))
-		response["categoryPortfolios"] = append(categoryPortfolios, buildCategoryPortfolio(item, cpId))
-		response["categories"] = append(categories, buildCategory(item, catId))
+		divisions = append(divisions, buildDivision(item, divisionId))
+		businessUnits = append(businessUnits, buildBusinessUnit(item, buId))
+		categoryPortfolios = append(categoryPortfolios, buildCategoryPortfolio(item, cpId))
+		categories = append(categories, buildCategory(item, catId))
+		items = append(items, item)
 	}
 
-	fmt.Println(response)
+	response["divisions"] = divisions
+	response["businessUnits"] = businessUnits
+	response["categoryPortfolios"] = categoryPortfolios
+	response["categories"] = categories
+
+	modeled, _ := json.MarshalIndent(response, "", " ")
+	md, _ := json.MarshalIndent(items, "", " ")
+
+	_ = ioutil.WriteFile("modeled_data.json", modeled, 0644)
+	_ = ioutil.WriteFile("master_data.json", md, 0644)
 }
