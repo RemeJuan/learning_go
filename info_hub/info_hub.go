@@ -112,12 +112,12 @@ func buildCategory(item MasterDataItem, id string) ProductSelection {
 }
 
 func main() {
-	response := make(map[string][]ProductSelection)
+	response := make(map[string]map[string]ProductSelection)
 
-	divisions := make([]ProductSelection, 0)
-	businessUnits := make([]ProductSelection, 0)
-	categoryPortfolios := make([]ProductSelection, 0)
-	categories := make([]ProductSelection, 0)
+	divisions := make(map[string]ProductSelection)
+	businessUnits := make(map[string]ProductSelection)
+	categoryPortfolios := make(map[string]ProductSelection)
+	categories := make(map[string]ProductSelection)
 	items := make([]MasterDataItem, 0)
 
 	for i := 0; i < 639; i++ {
@@ -127,10 +127,10 @@ func main() {
 		cpId := buildProductId(item, CategoryPortfolio)
 		catId := buildProductId(item, Category)
 
-		divisions = append(divisions, buildDivision(item, divisionId))
-		businessUnits = append(businessUnits, buildBusinessUnit(item, buId))
-		categoryPortfolios = append(categoryPortfolios, buildCategoryPortfolio(item, cpId))
-		categories = append(categories, buildCategory(item, catId))
+		divisions[divisionId] = buildDivision(item, divisionId)
+		businessUnits[buId] = buildBusinessUnit(item, buId)
+		categoryPortfolios[cpId] = buildCategoryPortfolio(item, cpId)
+		categories[catId] = buildCategory(item, catId)
 		items = append(items, item)
 	}
 
