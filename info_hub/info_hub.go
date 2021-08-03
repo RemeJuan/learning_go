@@ -89,7 +89,6 @@ func buildBusinessUnit(item MasterDataItem, id string) ProductSelection {
 		Id:            id,
 		QueryEngineId: item.BusinessUnit,
 		Name:          item.BusinessUnitName,
-		ParentId:      buildProductId(item, Division),
 	}
 }
 
